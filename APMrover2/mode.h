@@ -26,6 +26,7 @@ public:
         LOITER       = 5,
         FOLLOW       = 6,
         SIMPLE       = 7,
+        ECO          = 8,
         AUTO         = 10,
         RTL          = 11,
         SMART_RTL    = 12,
