@@ -216,7 +216,7 @@ void AP_Logger::Init(const struct LogStructure *structures, uint8_t num_types)
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 #include <stdio.h>
 
-#define DEBUG_LOG_STRUCTURES 0
+#define DEBUG_LOG_STRUCTURES 1
 
 extern const AP_HAL::HAL& hal;
 #define Debug(fmt, args ...)  do {::fprintf(stderr, "%s:%d: " fmt "\n", __FUNCTION__, __LINE__, ## args); } while(0)

@@ -1179,6 +1179,19 @@ struct PACKED log_OADijkstra {
     int32_t oa_lng;
 };
 
+struct PACKED log_OACSA {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    uint8_t state;
+    uint8_t error_id;
+    uint8_t curr_point;
+    uint8_t tot_points;
+    int32_t final_lat;
+    int32_t final_lng;
+    int32_t oa_lat;
+    int32_t oa_lng;
+};
+
 struct PACKED log_DSTL {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -1397,7 +1410,9 @@ struct PACKED log_Arm_Disarm {
     { LOG_OA_BENDYRULER_MSG, sizeof(log_OABendyRuler), \
       "OABR","QBHHfLLLL","TimeUS,Active,DesYaw,Yaw,Mar,DLat,DLng,OALat,OALng", "sbddmDUDU", "F----GGGG" }, \
     { LOG_OA_DIJKSTRA_MSG, sizeof(log_OADijkstra), \
-      "OADJ","QBBBBLLLL","TimeUS,State,Err,CurrPoint,TotPoints,DLat,DLng,OALat,OALng", "sbbbbDUDU", "F----GGGG" }
+      "OADJ","QBBBBLLLL","TimeUS,State,Err,CurrPoint,TotPoints,DLat,DLng,OALat,OALng", "sbbbbDUDU", "F----GGGG" }, \
+     { LOG_OA_CSA_MSG, sizeof(log_OACSA), \
+      "OACS","QBBBBLLLL","TimeUS,State,Err,CurrPoint,TotPoints,DLat,DLng,OALat,OALng", "sbbbbDUDU", "F----GGGG" } \
 
 // messages for more advanced boards
 #define LOG_EXTRA_STRUCTURES \
@@ -1772,7 +1787,7 @@ enum LogMessages : uint8_t {
     LOG_ARM_DISARM_MSG,
     LOG_OA_BENDYRULER_MSG,
     LOG_OA_DIJKSTRA_MSG,
-
+    LOG_OA_CSA_MSG,
     _LOG_LAST_MSG_
 };
 

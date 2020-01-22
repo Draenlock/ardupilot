@@ -20,6 +20,7 @@
 #include <AP_Logger/AP_Logger.h>
 #include "AP_OABendyRuler.h"
 #include "AP_OADijkstra.h"
+#include "AP_OACSA.h"
 
 extern const AP_HAL::HAL &hal;
 
@@ -34,7 +35,7 @@ const AP_Param::GroupInfo AP_OAPathPlanner::var_info[] = {
     // @Param: TYPE
     // @DisplayName: Object Avoidance Path Planning algorithm to use
     // @Description: Enabled/disable path planning around obstacles
-    // @Values: 0:Disabled,1:BendyRuler,2:Dijkstra
+    // @Values: 0:Disabled,1:BendyRuler,2:Dijkstra,3:CSA
     // @User: Standard
     AP_GROUPINFO_FLAGS("TYPE", 1,  AP_OAPathPlanner, _type, OA_PATHPLAN_DISABLED, AP_PARAM_FLAG_ENABLE),
 
@@ -91,6 +92,11 @@ void AP_OAPathPlanner::init()
             _oadijkstra = new AP_OADijkstra();
         }
         break;
+    case OA_PATHPLAN_CSA:
+        if (_oacsa == nullptr) {
+            _oacsa = new AP_OACSA();
+        }
+        break;
     }
 
     _oadatabase.init();
@@ -114,6 +120,12 @@ bool AP_OAPathPlanner::pre_arm_check(char *failure_msg, uint8_t failure_msg_len)
     case OA_PATHPLAN_DIJKSTRA:
         if (_oadijkstra == nullptr) {
             hal.util->snprintf(failure_msg, failure_msg_len, "Dijkstra OA requires reboot");
+            return false;
+        }
+        break;
+    case OA_PATHPLAN_CSA:
+        if (_oacsa == nullptr) {
+            hal.util->snprintf(failure_msg, failure_msg_len, "CSA OA requires reboot");
             return false;
         }
         break;
@@ -235,9 +247,10 @@ void AP_OAPathPlanner::avoidance_thread()
         // run background task looking for best alternative destination
         OA_RetState res = OA_NOT_REQUIRED;
         switch (_type) {
-        case OA_PATHPLAN_DISABLED:
+        case OA_PATHPLAN_DISABLED:{
             continue;
-        case OA_PATHPLAN_BENDYRULER:
+        }
+        case OA_PATHPLAN_BENDYRULER:{
             if (_oabendyruler == nullptr) {
                 continue;
             }
@@ -246,8 +259,8 @@ void AP_OAPathPlanner::avoidance_thread()
                 res = OA_SUCCESS;
             }
             break;
-
-        case OA_PATHPLAN_DIJKSTRA:
+        }
+        case OA_PATHPLAN_DIJKSTRA:{
             if (_oadijkstra == nullptr) {
                 continue;
             }
@@ -265,6 +278,26 @@ void AP_OAPathPlanner::avoidance_thread()
                 break;
             }
             break;
+        }
+        case OA_PATHPLAN_CSA:{
+            if (_oacsa == nullptr) {
+                continue;
+            }
+            _oacsa->set_fence_margin(_margin_max);
+            const AP_OACSA::AP_OACSA_State csa_state = _oacsa->update(avoidance_request2.current_loc, avoidance_request2.destination, origin_new, destination_new);
+            switch (csa_state) {
+            case AP_OACSA::CSA_STATE_NOT_REQUIRED:
+                res = OA_NOT_REQUIRED;
+                break;
+            case AP_OACSA::CSA_STATE_ERROR:
+                res = OA_ERROR;
+                break;
+            case AP_OACSA::CSA_STATE_SUCCESS:
+                res = OA_SUCCESS;
+                break;
+            }
+            break;
+        }
         }
 
         {

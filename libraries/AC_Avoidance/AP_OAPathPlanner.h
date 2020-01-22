@@ -6,6 +6,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include "AP_OABendyRuler.h"
 #include "AP_OADijkstra.h"
+#include "AP_OACSA.h"
 #include "AP_OADatabase.h"
 
 /*
@@ -51,7 +52,8 @@ public:
     enum OAPathPlanTypes {
         OA_PATHPLAN_DISABLED = 0,
         OA_PATHPLAN_BENDYRULER = 1,
-        OA_PATHPLAN_DIJKSTRA = 2
+        OA_PATHPLAN_DIJKSTRA = 2,
+        OA_PATHPLAN_CSA = 3
     };
 
     static const struct AP_Param::GroupInfo var_info[];
@@ -90,6 +92,7 @@ private:
     bool _thread_created;           // true once background thread has been created
     AP_OABendyRuler *_oabendyruler; // Bendy Ruler algorithm
     AP_OADijkstra *_oadijkstra;     // Dijkstra's algorithm
+    AP_OACSA *_oacsa;     // Dijkstra's algorithm
     AP_OADatabase _oadatabase;      // Database of dynamic objects to avoid
 #if !HAL_MINIMIZE_FEATURES
     uint32_t avoidance_latest_ms;   // last time Dijkstra's or BendyRuler algorithms ran
