@@ -2,6 +2,7 @@ import subprocess
 
 process = subprocess.Popen(['sim_vehicle.py', '--map', '-L' ,'Polytech'], 
                            stdout=subprocess.PIPE,
+                           stdin=subprocess.PIPE,
                            universal_newlines=True)
 
 '''
@@ -29,7 +30,10 @@ while True:
                 lat = arraySplit[index+1]
             if arraySplit[index] == 'LONG':
                 lon = arraySplit[index+1]
-                process.communicate("param set SIM_WIND_DIR 0")
+                process.stdin.write('param set SIM_WIND_DIR 0\n')
+                #process.communicate("param set SIM_WIND_DIR 0\n")
+                #process.communicate('\tstdin: to stdin\n')             
+#process.communicate(input="param set SIM_WIND_DIR 0\n", timeout=1)
         print(lat)  ## Valeur Lattitude
         print(lon)  ## Valeur Longitude
         
