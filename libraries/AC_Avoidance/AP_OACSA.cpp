@@ -18,10 +18,12 @@
 #include <AC_Fence/AC_Fence.h>
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_Logger/AP_Logger.h>
+#include "../APMrover2/Rover.h"
 
 #define OA_CSA_EXPANDING_ARRAY_ELEMENTS_PER_CHUNK  32      // expanding arrays for fence points and paths to destination will grow in increments of 20 elements
 #define OA_CSA_POLYGON_SHORTPATH_NOTSET_IDX        255     // index use to indicate we do not have a tentative short path for a node
 #define OA_CSA_ERROR_REPORTING_INTERVAL_MS         5000    // failure messages sent to GCS every 5 seconds
+#define DEBUG_DISPLAY                              0       // DEbug Display on console
 
 /// Constructor
 AP_OACSA::AP_OACSA() :
@@ -37,7 +39,18 @@ AP_OACSA::AP_OACSA() :
 // returns CSA_STATE_SUCCESS and populates origin_new and destination_new if avoidance is required
 AP_OACSA::AP_OACSA_State AP_OACSA::update(const Location &current_loc, const Location &destination, Location& origin_new, Location& destination_new)
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "CSA UPDATE");
+    //Rover *rover = Rover::rover.get_frame_type()
+    /*=============== DEV DUMP =================*/
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
+    gcs().send_text(MAV_SEVERITY_INFO, "current_loc : LAT %d LONG %d",current_loc.lat,current_loc.lng);
+
+    //gcs().send_text(MAV_SEVERITY_INFO, "current_loca         : %d / %d %",current_loc.lat,current_loc.lng);
+    gcs().send_text(MAV_SEVERITY_INFO, "destination         : %d / %d %",destination.lat,destination.lng);
+    gcs().send_text(MAV_SEVERITY_INFO, "origin_new______         : %d / %d %",origin_new.lat,origin_new.lng);
+    gcs().send_text(MAV_SEVERITY_INFO, "destination_new_         : %d / %d %",destination_new.lat,destination_new.lng);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
+    //AP_OACSA::getRoverInfos(); // on récupere les données Du rover
+    /*=============== DEV DUMP =================*/
     // require ekf origin to have been set
     struct Location ekf_origin {};
     {
@@ -649,7 +662,8 @@ bool AP_OACSA::create_fence_visgraph(AP_OACSA_Error &err_id)
 // requires create_inclusion_polygon_with_margin to have been run
 // returns true on success
 bool AP_OACSA::update_visgraph(AP_OAVisGraph& visgraph, const AP_OAVisGraph::OAItemID& oaid, const Vector2f &position, bool add_extra_position, Vector2f extra_position)
-{
+{ 
+    //gcs().send_text(MAV_SEVERITY_INFO, "POSTION  %f ==== %f",position.x,position.y);
     // exit immediately if no fence (with margin) points
     if (total_numpoints() == 0) {
         return false;
@@ -914,5 +928,39 @@ bool AP_OACSA::get_shortest_path_point(uint8_t point_num, Vector2f& pos)
 
     // we should never reach here but just in case
     return false;
+}
+
+// returns true if at least one inclusion or exclusion zone is enabled
+bool AP_OACSA::getRoverInfos()
+{
+    AP_BattMonitor &battery = AP::battery();
+    //Location &loc = Location::Location();
+
+    /*Check Battery instances*/
+    int instanceBattery;
+    if(battery.num_instances() == 1) {
+        // On est bon sinon screwed up
+        instanceBattery = battery.num_instances();
+    }
+    float wh = 0;
+    //,mah,amps;
+   // if(battery.consumed_wh(wh, instanceBattery)){
+
+  //  };
+    //battery.current_amps(amps,instanceBattery);
+    //battery.consumed_mah(mah,instanceBattery);
+
+
+    #ifdef DEBUG_DISPLAY
+    // Nombre d'instances de battery 
+    gcs().send_text(MAV_SEVERITY_INFO, "Battery Instance %d",instanceBattery);
+    // Tension de la batterie
+    gcs().send_text(MAV_SEVERITY_INFO, "Battery Voltage  %f V",battery.voltage());
+    gcs().send_text(MAV_SEVERITY_INFO, "Consummed_WH     %f V",wh);
+
+    #endif
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "Battery Voltage ,%f V",battery.voltage());
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "GET ROVER SINGLETON ,%f",battery.voltage());
+    return true;
 }
 

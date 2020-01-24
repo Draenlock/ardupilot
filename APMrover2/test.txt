@@ -1,0 +1,73 @@
+[0mSetting top to                           :[0m [32m/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD[0m 
+[0mSetting out to                           :[0m [32m/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/build[0m 
+[0mAutoconfiguration                        :[0m [32menabled[0m 
+[0mSetting board to                         :[0m [32msitl[0m 
+[0mUsing toolchain                          :[0m [32mnative[0m 
+[0mChecking for 'g++' (C++ compiler)        :[0m [32m/usr/bin/g++[0m 
+[0mChecking for 'gcc' (C compiler)          :[0m [32m/usr/bin/gcc[0m 
+[0mChecking for c flags '-MMD'              :[0m [32myes[0m 
+[0mChecking for cxx flags '-MMD'            :[0m [32myes[0m 
+[0mChecking for need to link with librt     :[0m [32mnot necessary[0m 
+[0mChecking for feenableexcept              :[0m [32myes[0m 
+[0mChecking for HAVE_CMATH_ISFINITE         :[0m [32myes[0m 
+[0mChecking for HAVE_CMATH_ISINF            :[0m [32myes[0m 
+[0mChecking for HAVE_CMATH_ISNAN            :[0m [32myes[0m 
+[0mChecking for NEED_CMATH_ISFINITE_STD_NAMESPACE :[0m [32myes[0m 
+[0mChecking for NEED_CMATH_ISINF_STD_NAMESPACE    :[0m [32myes[0m 
+[0mChecking for NEED_CMATH_ISNAN_STD_NAMESPACE    :[0m [32myes[0m 
+[0mChecking for header endian.h                   :[0m [32myes[0m 
+[0mChecking for header byteswap.h                 :[0m [32myes[0m 
+[0mChecking for HAVE_MEMRCHR                      :[0m [32myes[0m 
+[0mChecking for program 'python'                  :[0m [32m/usr/bin/python[0m 
+[0mChecking for python version >= 2.7.0           :[0m [32m2.7.17[0m 
+[0mChecking for program 'python'                  :[0m [32m/usr/bin/python[0m 
+[0mChecking for python version >= 2.7.0           :[0m [32m2.7.17[0m 
+[0mSource is git repository                       :[0m [32myes[0m 
+[0mUpdate submodules                              :[0m [32myes[0m 
+[0mChecking for program 'git'                     :[0m [32m/usr/bin/git[0m 
+[0mChecking for program 'size'                    :[0m [32m/usr/bin/size[0m 
+[0mBenchmarks                                     :[0m [33mdisabled[0m 
+[0mUnit tests                                     :[0m [32menabled[0m 
+[0mScripting                                      :[0m [32menabled[0m 
+[0mScripting runtime checks                       :[0m [32menabled[0m 
+[0mChecking for program 'rsync'                   :[0m [32m/usr/bin/rsync[0m 
+'configure' finished successfully (1.015s)
+Waf: Entering directory `/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/build/sitl'
+Embedding file sandbox.lua:libraries/AP_Scripting/scripts/sandbox.lua
+Waf: Leaving directory `/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/build/sitl'
+
+BUILD SUMMARY
+Build directory: /mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/build/sitl
+Target         Text     Data   BSS    Total  
+---------------------------------------------
+bin/ardurover  2142478  90264  66720  2299462
+
+Build commands will be stored in build/sitl/compile_commands.json
+'build' finished successfully (1.035s)
+RiTW: Starting APMrover2 : /mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/build/sitl/bin/ardurover -S -I0 --home  47.28134227660259,-1.5149108469813655,26.000,0 --model rover --speedup 1 --defaults /mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/Tools/autotest/default_params/rover.parm
+Connect tcp:127.0.0.1:5760 source_system=255
+Loaded module console
+Loaded module map
+Log Directory: 
+Telemetry log: mav.tlog
+Waiting for heartbeat from tcp:127.0.0.1:5760
+MAV> INITIALISING> Received 1079 parameters
+Saved 1079 parameters to mav.parm
+MANUAL> SIM_VEHICLE: Start
+SIM_VEHICLE: Killing tasks
+SIM_VEHICLE: Starting up at  47.28134227660259,-1.5149108469813655,26.000,0 (Polytech)
+SIM_VEHICLE: WAF build
+SIM_VEHICLE: Configure waf
+SIM_VEHICLE: "/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/modules/waf/waf-light" "configure" "--board" "sitl"
+SIM_VEHICLE: Building
+SIM_VEHICLE: "/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/modules/waf/waf-light" "build" "--target" "bin/ardurover"
+SIM_VEHICLE: Using defaults from (/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/Tools/autotest/default_params/rover.parm)
+SIM_VEHICLE: Run APMrover2
+SIM_VEHICLE: "/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/Tools/autotest/run_in_terminal_window.sh" "APMrover2" "/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/build/sitl/bin/ardurover" "-S" "-I0" "--home" " 47.28134227660259,-1.5149108469813655,26.000,0" "--model" "rover" "--speedup" "1" "--defaults" "/mnt/011f0f65-f7f0-42b6-84ce-c956843bf677/Polytech/PRD/PRD_Ardupilot/ArdupilotPRD/Tools/autotest/default_params/rover.parm"
+SIM_VEHICLE: Run MavProxy
+SIM_VEHICLE: "mavproxy.py" "--master" "tcp:127.0.0.1:5760" "--sitl" "127.0.0.1:5501" "--out" "127.0.0.1:14550" "--out" "127.0.0.1:14551" "--map" "--console"
+SIM_VEHICLE: Keyboard Interrupt received ...
+SIM_VEHICLE: Killing tasks
+EOF on TCP socket
+Attempting reconnect
+[Errno 111] Connection refused sleeping

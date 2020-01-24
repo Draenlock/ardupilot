@@ -69,6 +69,7 @@
 #include <AP_Follow/AP_Follow.h>
 #include <AP_OSD/AP_OSD.h>
 #include <AP_WindVane/AP_WindVane.h>
+#include <AC_Avoidance/AP_OACSA.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <AP_Scripting/AP_Scripting.h>
@@ -118,12 +119,12 @@ public:
     friend class ModeSmartRTL;
     friend class ModeFollow;
     friend class ModeSimple;
+    friend class AP_OACSA;
 
     friend class RC_Channel_Rover;
     friend class RC_Channels_Rover;
 
     friend class Sailboat;
-
     Rover(void);
 
     // HAL::Callbacks implementation.
@@ -458,6 +459,9 @@ public:
 };
 
 extern Rover rover;
+
+
+
 
 using AP_HAL::millis;
 using AP_HAL::micros;

@@ -331,6 +331,7 @@ void Rover::update_mission(void)
     }
 }
 
+
 #if OSD_ENABLED == ENABLED
 void Rover::publish_osd_info()
 {
@@ -350,5 +351,7 @@ void Rover::publish_osd_info()
 #endif
 
 Rover rover;
+
+
 
 AP_HAL_MAIN_CALLBACKS(&rover);

@@ -34,7 +34,7 @@ public:
     AP_OACSA_State update(const Location &current_loc, const Location &destination, Location& origin_new, Location& destination_new);
 
 private:
-
+    bool getRoverInfos();
     // returns true if at least one inclusion or exclusion zone is enabled
     bool some_fences_enabled() const;
 
