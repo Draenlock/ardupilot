@@ -1248,10 +1248,15 @@ class AutoTest(ABC):
 
     def set_parameter(self, name, value, add_to_context=True, epsilon=0.0002, retries=10):
         """Set parameters from vehicle."""
+        
+        self.print("BRUUUUUUUUUUUUUUUUUH")
+
         self.progress("Setting %s to %f" % (name, value))
         old_value = self.get_parameter(name, retry=2)
         for i in range(1, retries+2):
             self.mavproxy.send("param set %s %s\n" % (name, str(value)))
+            # PRINT VALUE OF NAME ETC
+            print("name=%s" % name)
             returned_value = self.get_parameter(name)
             delta = float(value) - returned_value
             if abs(delta) < epsilon:
@@ -1265,6 +1270,7 @@ class AutoTest(ABC):
                          % (returned_value, value))
 
     def get_parameter(self, name, retry=1, timeout=60):
+        print(name)
         """Get parameters from vehicle."""
         for i in range(0, retry):
             self.mavproxy.send("param fetch %s\n" % name)
@@ -2280,6 +2286,9 @@ class AutoTest(ABC):
 
         self.progress("Waiting for Parameters")
         self.mavproxy.expect('Received [0-9]+ parameters')
+
+    def get_mavproxy(self):
+        return self.mavproxy
 
     def init(self):
         """Initilialize autotest feature."""

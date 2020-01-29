@@ -41,15 +41,15 @@ AP_OACSA::AP_OACSA_State AP_OACSA::update(const Location &current_loc, const Loc
 {
     //Rover *rover = Rover::rover.get_frame_type()
     /*=============== DEV DUMP =================*/
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
-    gcs().send_text(MAV_SEVERITY_INFO, "current_loc : LAT %d LONG %d",current_loc.lat,current_loc.lng);
-
-    //gcs().send_text(MAV_SEVERITY_INFO, "current_loca         : %d / %d %",current_loc.lat,current_loc.lng);
-    gcs().send_text(MAV_SEVERITY_INFO, "destination         : %d / %d %",destination.lat,destination.lng);
-    gcs().send_text(MAV_SEVERITY_INFO, "origin_new______         : %d / %d %",origin_new.lat,origin_new.lng);
-    gcs().send_text(MAV_SEVERITY_INFO, "destination_new_         : %d / %d %",destination_new.lat,destination_new.lng);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
-    //AP_OACSA::getRoverInfos(); // on récupere les données Du rover
+    #ifdef DEBUG_DISPLAY
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
+    //gcs().send_text(MAV_SEVERITY_INFO, "current_loc : LAT %d LONG %d",current_loc.lat,current_loc.lng);
+    //gcs().send_text(MAV_SEVERITY_INFO, "destination         : %d / %d",destination.lat,destination.lng);
+    //gcs().send_text(MAV_SEVERITY_INFO, "origin_new______         : %d / %d",origin_new.lat,origin_new.lng);
+    //gcs().send_text(MAV_SEVERITY_INFO, "destination_new_         : %d / %d",destination_new.lat,destination_new.lng);
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
+    #endif
+    AP_OACSA::getRoverInfos(); // on récupere les données Du rover
     /*=============== DEV DUMP =================*/
     // require ekf origin to have been set
     struct Location ekf_origin {};
@@ -802,6 +802,7 @@ bool AP_OACSA::find_closest_node_idx(node_index &node_idx) const
 // resulting path is stored in _shortest_path array as vector offsets from EKF origin
 bool AP_OACSA::calc_shortest_path(const Location &origin, const Location &destination, AP_OACSA_Error &err_id)
 {
+    gcs().send_text(MAV_SEVERITY_INFO, "Calc_Shortest_Path %d %d ", origin.lat,origin.lng);
     // convert origin and destination to offsets from EKF origin
     Vector2f origin_NE, destination_NE;
     if (!origin.get_vector_xy_from_origin_NE(origin_NE) || !destination.get_vector_xy_from_origin_NE(destination_NE)) {
@@ -897,6 +898,8 @@ bool AP_OACSA::calc_shortest_path(const Location &origin, const Location &destin
     if (success) {
         _path_source = origin_NE;
         _path_destination = destination_NE;
+        gcs().send_text(MAV_SEVERITY_INFO, "_path_source %d %d", _path_source.x,_path_source.y);
+        gcs().send_text(MAV_SEVERITY_INFO, "_path_destination %d %d", _path_destination.x,_path_destination.y);
     } else {
         err_id = AP_OACSA_Error::CSA_ERROR_COULD_NOT_FIND_PATH;
     }
@@ -942,25 +945,90 @@ bool AP_OACSA::getRoverInfos()
         // On est bon sinon screwed up
         instanceBattery = battery.num_instances();
     }
-    float wh = 0;
-    //,mah,amps;
-   // if(battery.consumed_wh(wh, instanceBattery)){
+    float wh;
+     if(battery.consumed_wh(wh, instanceBattery-1)){
 
-  //  };
+    };
     //battery.current_amps(amps,instanceBattery);
     //battery.consumed_mah(mah,instanceBattery);
 
 
     #ifdef DEBUG_DISPLAY
     // Nombre d'instances de battery 
-    gcs().send_text(MAV_SEVERITY_INFO, "Battery Instance %d",instanceBattery);
+    //gcs().send_text(MAV_SEVERITY_INFO, "Battery Instance %d",instanceBattery);
     // Tension de la batterie
-    gcs().send_text(MAV_SEVERITY_INFO, "Battery Voltage  %f V",battery.voltage());
-    gcs().send_text(MAV_SEVERITY_INFO, "Consummed_WH     %f V",wh);
+    //gcs().send_text(MAV_SEVERITY_INFO, "Battery Voltage  %f V",battery.voltage());
+    //gcs().send_text(MAV_SEVERITY_INFO, "Consummed_WH     %f V",wh);
 
     #endif
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "Battery Voltage ,%f V",battery.voltage());
+    gcs().send_text(MAV_SEVERITY_INFO, "Consummed_WH     %f V",wh);
     //gcs().send_text(MAV_SEVERITY_CRITICAL, "GET ROVER SINGLETON ,%f",battery.voltage());
     return true;
 }
 
+
+// Get the Value of th econsummed WH of the battery
+float AP_OACSA::getBatteryConsummedWh()
+{
+    AP_BattMonitor &battery = AP::battery();
+    //Location &loc = Location::Location();
+
+    /*Check Battery instances*/
+    int instanceBattery;
+    if(battery.num_instances() == 1) {
+        // On est bon sinon screwed up
+        instanceBattery = battery.num_instances();
+    }
+    float wh;
+     if(battery.consumed_wh(wh, instanceBattery-1)){
+
+    };
+    return wh;
+}
+
+
+/*
+4.5km -> Delta de 0.06 -> x
+centre = L,l
+coin superieur gauche =     L+ x, l-x
+coin superieur droit =      L+ x, l+x
+coin superieur gauche =     L- x, l+x
+coin superieur gauche =     L- x, l-x
+
+Polytech= 47.28134227660259,-1.5149108469813655
+
+*/
+
+
+/*
+http://ira.lib.polyu.edu.hk/bitstream/10397/78117/1/Ganganath_Shortest_Path_Energy-constrained.pdf
+*/
+bool AP_OACSA::InitCSA(){
+    //TEst 100% 17.2Km ->  12.7km = 4.5km
+    // 100% -> 0.00 wh
+    // 50%  -> 19.824 wh
+    // 10%  -> 35.481 wh
+    // 0%   -> 40.633wh Valeur a choisir pour le vecteur de contrainte On va prendre 40 WH
+    
+    //float BatteryCapacity = 40;
+
+  
+    //const float MAX_WH_MESURED = 0;
+    //const float AVERAGE_AMPS_NEEDED = 12.5;
+    //  Initialiser les listes OPEN et CLOSED
+    list<EntryList> OPEN;
+    list<EntryList> CLOSED;
+    // TODO Initialise le vecteur de contrainte phi
+    // TODO Initialiser le vecteur de cout H(Ni)
+    vector<float> constraintVector;
+    // Ajouter la valeur de la batterie restante au vecteur de contrainte 
+    vector<float> costVector;
+
+
+
+    // TODO STEP 1 Vérifier SI le vecteur de COUT H(Ni) Domine le vecteur de contraite phi Si oui FAILURE
+    // TODO STEP 2 Ajouter la premiere EntryList dans la liste OPEN
+    // TODO STEP 3 SI OPEN est vide Failure
+
+    return true;
+}

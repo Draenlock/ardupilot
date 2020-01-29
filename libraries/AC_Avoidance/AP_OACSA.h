@@ -5,13 +5,17 @@
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
 #include "AP_OAVisGraph.h"
+#include <vector> 
+#include <list>
 
+using namespace std;
 /*
  * CSA's algorithm for path planning around polygon fence
  */
 
 class AP_OACSA {
 public:
+    friend class EntryList;
 
     AP_OACSA();
 
@@ -35,6 +39,7 @@ public:
 
 private:
     bool getRoverInfos();
+    float getBatteryConsummedWh();
     // returns true if at least one inclusion or exclusion zone is enabled
     bool some_fences_enabled() const;
 
@@ -186,4 +191,32 @@ private:
 
     AP_OACSA_Error _error_last_id;                 // last error id sent to GCS
     uint32_t _error_last_report_ms;                     // last time an error message was sent to GCS
+
+    /*Code*/
+    bool InitCSA();
+};
+
+/* Une entrée de liste est composée
+* E(LambdaNi) = {Ni, G(LambdaNi), F(LambdaNi), P(LambdaNi)}
+*   Ni = Node de l'entrée
+*   G(LambdaNi) = Cout consommé depuis la node de départ
+*   F(LambdaNi) = Cout Total ( F = G+H )voir A*
+*   P(LambdaNi) = Lien vers la node précédente
+*
+*/
+class EntryList {
+    friend class AP_OACSA;
+    AP_OACSA::ShortPathNode _node_csa; // Node Ni
+    vector<float> accumulateCost; // G(lambdaNi)
+    vector<float> fullCost; //F(LambdaNi)
+    AP_ExpandingArray<AP_OACSA::ShortPathNode> * _previousPath; // P(LambdaNi)
+
+
+    EntryList(AP_OACSA::ShortPathNode node, vector<float> accCost, vector<float> fullyCost, AP_ExpandingArray<AP_OACSA::ShortPathNode> * _prevPath ){
+        _node_csa = node;
+        accumulateCost = accCost;
+        fullCost=fullyCost;
+        _previousPath=_prevPath;
+    };
+
 };
