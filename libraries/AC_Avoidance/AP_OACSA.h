@@ -5,17 +5,49 @@
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
 #include "AP_OAVisGraph.h"
+//#include "AC_Wind/AC_Wind.h"
 #include <vector> 
 #include <list>
 
 using namespace std;
+
+#define WIND_MATRIX_RESOLUTION_IN_METERS           10
+#define WIND_MATRIX_MAX_SPAN                       5000
+
 /*
  * CSA's algorithm for path planning around polygon fence
  */
 
+
+class AC_Wind
+{
+    friend class AP_OACSA;
+    public:
+    float heading, speed;
+    AC_Wind(float hdg, float spd);
+    AC_Wind();
+    float getHeading(){
+        return heading;
+    }
+
+    float getSpeed(){
+        return speed;
+    }
+    void setHeading(float hdg){
+        heading = hdg;
+    }
+    void setSpeed(float spd){
+        speed = spd;
+    }
+
+};
+
+
+
 class AP_OACSA {
 public:
     friend class EntryList;
+    friend class AC_Wind;
 
     AP_OACSA();
 
@@ -39,6 +71,7 @@ public:
 
 private:
     bool getRoverInfos();
+    
     float getBatteryConsummedWh();
     // returns true if at least one inclusion or exclusion zone is enabled
     bool some_fences_enabled() const;
@@ -192,8 +225,7 @@ private:
     AP_OACSA_Error _error_last_id;                 // last error id sent to GCS
     uint32_t _error_last_report_ms;                     // last time an error message was sent to GCS
 
-    /*Code*/
-    bool InitCSA();
+    bool InitCSA(ShortPathNode startingPoint);
 };
 
 /* Une entrée de liste est composée
@@ -219,4 +251,7 @@ class EntryList {
         _previousPath=_prevPath;
     };
 
+
 };
+
+

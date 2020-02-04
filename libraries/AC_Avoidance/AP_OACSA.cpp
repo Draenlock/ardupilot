@@ -19,13 +19,21 @@
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_Logger/AP_Logger.h>
 #include "../APMrover2/Rover.h"
+//#include "AC_Wind/AC_Wind.h"
 
 #define OA_CSA_EXPANDING_ARRAY_ELEMENTS_PER_CHUNK  32      // expanding arrays for fence points and paths to destination will grow in increments of 20 elements
 #define OA_CSA_POLYGON_SHORTPATH_NOTSET_IDX        255     // index use to indicate we do not have a tentative short path for a node
 #define OA_CSA_ERROR_REPORTING_INTERVAL_MS         5000    // failure messages sent to GCS every 5 seconds
 #define DEBUG_DISPLAY                              0       // DEbug Display on console
 
+
 /// Constructor
+
+AC_Wind::AC_Wind(float hdg, float spd){
+        heading= hdg;
+        speed = spd;
+    }
+
 AP_OACSA::AP_OACSA() :
         _inclusion_polygon_pts(OA_CSA_EXPANDING_ARRAY_ELEMENTS_PER_CHUNK),
         _exclusion_polygon_pts(OA_CSA_EXPANDING_ARRAY_ELEMENTS_PER_CHUNK),
@@ -39,15 +47,14 @@ AP_OACSA::AP_OACSA() :
 // returns CSA_STATE_SUCCESS and populates origin_new and destination_new if avoidance is required
 AP_OACSA::AP_OACSA_State AP_OACSA::update(const Location &current_loc, const Location &destination, Location& origin_new, Location& destination_new)
 {
-    //Rover *rover = Rover::rover.get_frame_type()
+    /*
+    Lancement de la fonction CSA* une seule fois
+
+    */
+    //AP_OACSA::InitCSA(_short_path_data[0]);
     /*=============== DEV DUMP =================*/
     #ifdef DEBUG_DISPLAY
-    //gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
     //gcs().send_text(MAV_SEVERITY_INFO, "current_loc : LAT %d LONG %d",current_loc.lat,current_loc.lng);
-    //gcs().send_text(MAV_SEVERITY_INFO, "destination         : %d / %d",destination.lat,destination.lng);
-    //gcs().send_text(MAV_SEVERITY_INFO, "origin_new______         : %d / %d",origin_new.lat,origin_new.lng);
-    //gcs().send_text(MAV_SEVERITY_INFO, "destination_new_         : %d / %d",destination_new.lat,destination_new.lng);
-    //gcs().send_text(MAV_SEVERITY_CRITICAL, "==============Location==============");
     #endif
     AP_OACSA::getRoverInfos(); // on récupere les données Du rover
     /*=============== DEV DUMP =================*/
@@ -1003,7 +1010,7 @@ Polytech= 47.28134227660259,-1.5149108469813655
 /*
 http://ira.lib.polyu.edu.hk/bitstream/10397/78117/1/Ganganath_Shortest_Path_Energy-constrained.pdf
 */
-bool AP_OACSA::InitCSA(){
+bool AP_OACSA::InitCSA(ShortPathNode startingPoint/*Starting point*/){
     //TEst 100% 17.2Km ->  12.7km = 4.5km
     // 100% -> 0.00 wh
     // 50%  -> 19.824 wh
@@ -1016,19 +1023,50 @@ bool AP_OACSA::InitCSA(){
     //const float MAX_WH_MESURED = 0;
     //const float AVERAGE_AMPS_NEEDED = 12.5;
     //  Initialiser les listes OPEN et CLOSED
-    list<EntryList> OPEN;
-    list<EntryList> CLOSED;
+    vector<EntryList> OPEN;
+    vector<EntryList> CLOSED;
     // TODO Initialise le vecteur de contrainte phi
     // TODO Initialiser le vecteur de cout H(Ni)
     vector<float> constraintVector;
-    // Ajouter la valeur de la batterie restante au vecteur de contrainte 
     vector<float> costVector;
+    vector<float>::iterator it;
 
+    it = costVector.begin();
+    it = costVector.insert ( it , 200 );
 
+    costVector.insert (it,2,300);
+    if(costVector.empty()){
+        return false;
+    }
+    // Ajouter la valeur de la batterie restante au vecteur de contrainte 
+    //constraintVector.push_back(BatteryCapacity);
+    // c Vecteur de cout H a 0 car le programme vient de commencer
+    //float value = 0;
+    //costVector.push_back(value);
 
     // TODO STEP 1 Vérifier SI le vecteur de COUT H(Ni) Domine le vecteur de contraite phi Si oui FAILURE
+   /* if (constraintVector < costVector) 
+    {
+        return false;
+    }*/
     // TODO STEP 2 Ajouter la premiere EntryList dans la liste OPEN
-    // TODO STEP 3 SI OPEN est vide Failure
-
+   // EntryList entry = EntryList(startingPoint,costVector,constraintVector,NULL);
+   /* OPEN.push_back(entry);
+    // STEP 3 SI OPEN est vide Failure
+    if(OPEN.empty()){
+        return false;
+    }*/
+    // TODO Step 4 Remove 
+    /*ξ(λni) ={ni,~g(λni),~f(λni),p(λni)} from OPEN  
+    whosef0cost  is  minimum  and  record  it  onCLOSED.  
+    If  there  exsit  more  than  one  such  entries,
+    select an entry among them such that its~fdominatesor  equals  others.
+    Select  a  path  arbitarary  if  theyare  nondominated  to  each  other,  but  favor  any  pathterminating att.
+    */
+    /* 
+    for(unsigned int i = 0; i < OPEN.size(); i++){
+        gcs().send_text(MAV_SEVERITY_INFO,"TypeOf OPEN[i] is : %s",typeid(OPEN[i]).name());
+    }*/
     return true;
 }
+
