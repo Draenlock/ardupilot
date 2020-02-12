@@ -12,7 +12,7 @@
 using namespace std;
 
 #define WIND_MATRIX_RESOLUTION_IN_METERS           10
-#define WIND_MATRIX_MAX_SPAN                       5000
+#define WIND_MATRIX_MAX_SPAN_IN_METERS             9000
 
 /*
  * CSA's algorithm for path planning around polygon fence
@@ -226,6 +226,12 @@ private:
     uint32_t _error_last_report_ms;                     // last time an error message was sent to GCS
 
     bool InitCSA(ShortPathNode startingPoint);
+
+    void constructMatix( int matrix[900][900][2]);
+    int getWindDirection( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2],float lat, float lng);
+    int getWindSpeed( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2],float lat, float lng);
+    vector<int> LocateInMatrix( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2],float lat, float lng);
+    Location firstLocation;
 };
 
 /* Une entrée de liste est composée

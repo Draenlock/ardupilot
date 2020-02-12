@@ -20,19 +20,22 @@
 #include <AP_Logger/AP_Logger.h>
 #include "../APMrover2/Rover.h"
 //#include "AC_Wind/AC_Wind.h"
+#include <math.h>
 
 #define OA_CSA_EXPANDING_ARRAY_ELEMENTS_PER_CHUNK  32      // expanding arrays for fence points and paths to destination will grow in increments of 20 elements
 #define OA_CSA_POLYGON_SHORTPATH_NOTSET_IDX        255     // index use to indicate we do not have a tentative short path for a node
 #define OA_CSA_ERROR_REPORTING_INTERVAL_MS         5000    // failure messages sent to GCS every 5 seconds
 #define DEBUG_DISPLAY                              0       // DEbug Display on console
 
+#define WIND_MATRIX_RESOLUTION_IN_METERS           10
+#define WIND_MATRIX_MAX_SPAN_IN_METERS             9000
+//Flag for matrix construction
+bool created = false;
+//Wind matrix
+int windMatrix [WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2];
 
 /// Constructor
 
-AC_Wind::AC_Wind(float hdg, float spd){
-        heading= hdg;
-        speed = spd;
-    }
 
 AP_OACSA::AP_OACSA() :
         _inclusion_polygon_pts(OA_CSA_EXPANDING_ARRAY_ELEMENTS_PER_CHUNK),
@@ -47,16 +50,21 @@ AP_OACSA::AP_OACSA() :
 // returns CSA_STATE_SUCCESS and populates origin_new and destination_new if avoidance is required
 AP_OACSA::AP_OACSA_State AP_OACSA::update(const Location &current_loc, const Location &destination, Location& origin_new, Location& destination_new)
 {
-    /*
-    Lancement de la fonction CSA* une seule fois
 
-    */
+    if(!created){
+        created = true;
+        //AP_OACSA::constructMatix(windMatrix);
+        firstLocation = current_loc;
+    }
+   // float lat = current_loc.lat;
+   // float lng = current_loc.lng;
+    //gcs().send_text(MAV_SEVERITY_INFO, "WIND : DIR : %d   // SPD : %d",AP_OACSA::getWindDirection(windMatrix,lat,lng),AP_OACSA::getWindSpeed(windMatrix,lat,lng));
     //AP_OACSA::InitCSA(_short_path_data[0]);
     /*=============== DEV DUMP =================*/
     #ifdef DEBUG_DISPLAY
     //gcs().send_text(MAV_SEVERITY_INFO, "current_loc : LAT %d LONG %d",current_loc.lat,current_loc.lng);
     #endif
-    AP_OACSA::getRoverInfos(); // on récupere les données Du rover
+   // AP_OACSA::getRoverInfos(); // on récupere les données Du rover
     /*=============== DEV DUMP =================*/
     // require ekf origin to have been set
     struct Location ekf_origin {};
@@ -1011,7 +1019,7 @@ Polytech= 47.28134227660259,-1.5149108469813655
 http://ira.lib.polyu.edu.hk/bitstream/10397/78117/1/Ganganath_Shortest_Path_Energy-constrained.pdf
 */
 bool AP_OACSA::InitCSA(ShortPathNode startingPoint/*Starting point*/){
-    //TEst 100% 17.2Km ->  12.7km = 4.5km
+    // 0TEst 100% 17.2Km ->  12.7km = 4.5km
     // 100% -> 0.00 wh
     // 50%  -> 19.824 wh
     // 10%  -> 35.481 wh
@@ -1070,3 +1078,75 @@ bool AP_OACSA::InitCSA(ShortPathNode startingPoint/*Starting point*/){
     return true;
 }
 
+
+// WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS
+//This method will construct a 900x900 wind matrix
+void AP_OACSA::constructMatix( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2]) {
+    //init the first wind vector
+    int moduloWind = 360;
+    int moduloSpeed = 40;
+    matrix[0][0][0]= abs(roundf((rand() % moduloWind)));
+    matrix[0][0][1]= abs(roundf((rand() % moduloSpeed)));
+
+    for (int i = 0; i<(WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS); i= i+1) {
+        for (int y = 0; y<(WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS); y=y+1) {
+            // We exclude the intial wind vector
+            if (y > 0 && i > 0) {
+                if ( i > 1 && y > 1) {
+                    // angle and speed of wind vector  are determined from neighbor vector with a variance of 10
+                    int angle = abs(roundf((matrix[i-1][y][0]+matrix[i][y-1][0]) / 2 + (rand() % 20  + (-9))%moduloWind));
+                    int speed = abs(roundf((matrix[i-1][y][1]+matrix[i][y-1][1]) / 2 + (rand() % 20  + (-9))%moduloSpeed));
+                    matrix [i][y][0]= angle;
+                    matrix [i][y][1]= speed;
+
+                } else if ( i > 1) {
+                    int angle = abs(roundf(matrix[i-1][y][0] + (rand() % 20  + (-10))%moduloWind));
+                    int speed = abs(roundf(matrix[i-1][y][1] + (rand() % 8  + (-4))%moduloSpeed));
+                    matrix [i][y][0]= angle;
+                    matrix [i][y][1]= speed;
+
+                } else if ( y > 1) {
+                    int angle = abs(roundf(matrix[i][y-1][0] + (rand() % 20  + (-10))%moduloWind));
+                    int speed = abs(roundf(matrix[i][y-1][1] + (rand() % 8  + (-4))%moduloSpeed));
+                    matrix [i][y][0]= angle;
+                    matrix [i][y][1]= speed;
+
+                }
+            }
+           // gcs().send_text(MAV_SEVERITY_INFO, "%d %d ",matrix[i][y][0],matrix[i][y][1]);
+        }
+    }
+
+}
+
+int AP_OACSA::getWindDirection( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2],float lat, float lng)
+{
+    return AP_OACSA::LocateInMatrix(matrix,lat, lng).at(0);
+}
+int AP_OACSA::getWindSpeed( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2],float lat, float lng)
+{
+    return AP_OACSA::LocateInMatrix(matrix,lat,lng).at(1);
+}
+
+vector<int> AP_OACSA::LocateInMatrix( int matrix[WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS][2],float lat , float lng)
+{
+    vector<int> pos(0,0); //0.066
+    float MaxDelta = 0.066;
+    // calculate the relative position based on the center of the matrix 
+    float deltaLat = lat-firstLocation.lat;
+    float deltaLng = lng-firstLocation.lng;
+
+    gcs().send_text(MAV_SEVERITY_INFO,"delta : %f || %f", deltaLat,deltaLng);
+    //gcs().send_parameter_value();
+
+
+    //Verifier si on est dans la range de 5km/5km juste pour le test
+    if((abs(deltaLat)>MaxDelta) || (abs(deltaLng)>MaxDelta)){
+        // on renvoi un erreur au pire
+    };
+    
+    pos.at(0) = roundf((deltaLat*((WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS)/2)/MaxDelta+450));
+    pos.at(1) = roundf((deltaLng*((WIND_MATRIX_MAX_SPAN_IN_METERS/WIND_MATRIX_RESOLUTION_IN_METERS)/2)/MaxDelta+450));
+
+    return pos;
+}
